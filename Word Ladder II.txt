@@ -1,0 +1,64 @@
+import java.util.*;
+
+class Solution {
+    public List<List<String>> findLadders(String beginWord, String endWord, List<String> wordList) {
+        List<List<String>> res = new ArrayList<>();
+        Set<String> dict = new HashSet<>(wordList);
+        if (!dict.contains(endWord)) return res;
+
+        Map<String, List<String>> parents = new HashMap<>();
+        Map<String, Integer> level = new HashMap<>();
+        Queue<String> q = new LinkedList<>();
+
+        q.offer(beginWord);
+        level.put(beginWord, 0);
+        boolean found = false;
+
+        while (!q.isEmpty() && !found) {
+            int size = q.size();
+            for (int i = 0; i < size; i++) {
+                String curr = q.poll();
+                int currLevel = level.get(curr);
+
+                char[] chars = curr.toCharArray();
+                for (int j = 0; j < chars.length; j++) {
+                    char old = chars[j];
+                    for (char c = 'a'; c <= 'z'; c++) {
+                        chars[j] = c;
+                        String next = new String(chars);
+
+                        if (dict.contains(next)) {
+                            if (!level.containsKey(next)) {
+                                level.put(next, currLevel + 1);
+                                q.offer(next);
+                                parents.computeIfAbsent(next, k -> new ArrayList<>()).add(curr);
+                            } else if (level.get(next) == currLevel + 1) {
+                                parents.computeIfAbsent(next, k -> new ArrayList<>()).add(curr);
+                            }
+                            if (next.equals(endWord)) found = true;
+                        }
+                    }
+                    chars[j] = old;
+                }
+            }
+        }
+
+        if (found) {
+            backtrack(endWord, beginWord, parents, new LinkedList<>(Arrays.asList(endWord)), res);
+        }
+        return res;
+    }
+
+    private void backtrack(String word, String start, Map<String, List<String>> parents, LinkedList<String> path, List<List<String>> res) {
+        if (word.equals(start)) {
+            res.add(new ArrayList<>(path));
+            return;
+        }
+        if (!parents.containsKey(word)) return;
+        for (String p : parents.get(word)) {
+            path.addFirst(p);
+            backtrack(p, start, parents, path, res);
+            path.removeFirst();
+        }
+    }
+}
